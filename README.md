@@ -1,5 +1,21 @@
-# zyacbt
+<div align="center">
+
+# ZYA CBT
+
 __Aplikasi Ujian Online ZYA CBT.__
+
+<p>
+  <img src="https://img.shields.io/badge/PHP-8.4-777BB4?logo=php&logoColor=white" alt="PHP 8.4">
+  <img src="https://img.shields.io/badge/CodeIgniter-3-EF4223?logo=codeigniter&logoColor=white" alt="CodeIgniter 3">
+  <img src="https://img.shields.io/badge/MariaDB-10.4-003545?logo=mariadb&logoColor=white" alt="MariaDB 10.4">
+  <img src="https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/Apache-2.4-D22128?logo=apache&logoColor=white" alt="Apache 2.4">
+  <img src="https://img.shields.io/badge/Composer-2-885630?logo=composer&logoColor=white" alt="Composer 2">
+  <img src="https://img.shields.io/badge/PHPWord-1.4.0-4F81BD" alt="PHPWord 1.4.0">
+  <img src="https://img.shields.io/badge/PhpSpreadsheet-1.30.7-217346" alt="PhpSpreadsheet 1.30.7">
+</p>
+
+</div>
 
 ![](https://achmadlutfi.files.wordpress.com/2017/10/halaman-login-zya-cbt.png?w=620&h=508)
 
