@@ -17,6 +17,25 @@ __Aplikasi Ujian Online ZYA CBT.__
 
 </div>
 
+### Menjalankan dengan Docker
+
+Pastikan Docker Engine dan Docker Compose v2 sudah terpasang, lalu jalankan dari root repository:
+
+```bash
+mkdir -p database
+docker compose up --build -d
+```
+
+Aplikasi dapat diakses melalui [http://localhost:8080](http://localhost:8080). Service `db` menggunakan MariaDB 10.4 dan menyimpan data secara persistent di folder `./database`. Pada inisialisasi pertama, dump `zyacbt-public-2024-05-05-tanpa-database.sql` diimpor otomatis.
+
+Perintah operasional yang umum digunakan:
+
+```bash
+docker compose logs -f app  # melihat log aplikasi
+docker compose ps           # melihat status service
+docker compose down         # menghentikan service tanpa menghapus database
+```
+
 ![](https://achmadlutfi.files.wordpress.com/2017/10/halaman-login-zya-cbt.png?w=620&h=508)
 
 Alhamdulillah, setelah berkutat dengan kode kode yang suka mem php dalam waktu yang cukup lama. Akhirnya aplikasi ujian online atau biasa kita kenal dengan nama ujian berbasis komputer telah diluncurkan. Aplikasi ini diberi nama ZYA CBT.
