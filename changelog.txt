@@ -12,6 +12,7 @@
 - Menambahkan regression check untuk memastikan notice database tersebut tidak muncul kembali.
 - Menambahkan GitHub Actions untuk membuat GitHub Release otomatis dari push ke branch `main` dan `release/*`.
 - Menambahkan build dan push Docker image otomatis ke GitHub Container Registry (GHCR).
+- Membuat versi aplikasi pada footer otomatis membaca entri terbaru `changelog.txt`.
 
 2025-12-25
 - Codeigniter 3.3.0 support php 8.4

@@ -3,7 +3,19 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 $config['upload_path'] = 'uploads';
 $config['site_name'] = 'Computer Based-Test';
-$config['site_version'] = '2025.12.25';
+
+// Ambil versi dari entri tanggal terbaru pada changelog agar footer selalu sesuai source code.
+$config['site_version'] = 'dev';
+$changelog_file = dirname(APPPATH).DIRECTORY_SEPARATOR.'changelog.txt';
+if (is_readable($changelog_file)) {
+	$changelog_lines = file($changelog_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+	if (is_array($changelog_lines) && isset($changelog_lines[0])) {
+		$latest_version = trim($changelog_lines[0]);
+		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $latest_version)) {
+			$config['site_version'] = $latest_version;
+		}
+	}
+}
 
 /*
 |--------------------------------------------------------------------------
