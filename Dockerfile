@@ -19,6 +19,7 @@ WORKDIR /var/www/html
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 COPY . /var/www/html
+COPY docker/php.ini /usr/local/etc/php/conf.d/zyacbt.ini
 COPY docker/entrypoint.sh /usr/local/bin/zyacbt-entrypoint
 
 RUN composer install \

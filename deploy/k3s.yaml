@@ -135,7 +135,7 @@ spec:
           command: ["sh", "-c", "until nc -z zyacbt-db 3306; do echo waiting for database; sleep 2; done"]
       containers:
         - name: app
-          image: docker.io/library/zyacbt:develop-2c0618f-loginfix
+          image: docker.io/library/zyacbt:develop-upload-128m
           imagePullPolicy: Never
           env:
             - name: DB_HOST
