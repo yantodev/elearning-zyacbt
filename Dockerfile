@@ -19,6 +19,7 @@ WORKDIR /var/www/html
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 COPY . /var/www/html
+COPY docker/entrypoint.sh /usr/local/bin/zyacbt-entrypoint
 
 RUN composer install \
     --working-dir=application \
@@ -27,5 +28,9 @@ RUN composer install \
     --no-interaction \
     --no-progress
 
-RUN mkdir -p application/cache application/logs public/uploads \
-    && chown -R www-data:www-data application/cache application/logs public/uploads
+RUN mkdir -p uploads application/cache application/logs public/uploads \
+    && chown -R www-data:www-data uploads application/cache application/logs public/uploads \
+    && chmod +x /usr/local/bin/zyacbt-entrypoint
+
+ENTRYPOINT ["/usr/local/bin/zyacbt-entrypoint"]
+CMD ["apache2-foreground"]

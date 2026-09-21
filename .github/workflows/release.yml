@@ -5,6 +5,12 @@ on:
     branches:
       - main
       - 'release/*'
+      - develop
+
+env:
+  APP_MAJOR: '1'
+  APP_MINOR: '0'
+  APP_PATCH: '0'
 
 permissions:
   contents: write
@@ -12,7 +18,7 @@ permissions:
 
 jobs:
   release:
-    name: Create GitHub Release
+    name: Build image and create release
     runs-on: ubuntu-latest
 
     steps:
@@ -42,8 +48,11 @@ jobs:
           fi
 
           release_tag="v${release_date//-/.}-build.${GITHUB_RUN_NUMBER}"
+          app_semver="${APP_MAJOR}.${APP_MINOR}.${APP_PATCH}"
+          dev_tag="dev-${release_date:0:4}-${app_semver}"
           echo "date=$release_date" >> "$GITHUB_OUTPUT"
           echo "tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "dev_tag=$dev_tag" >> "$GITHUB_OUTPUT"
 
       - name: Login ke GitHub Container Registry
         uses: docker/login-action@v3
@@ -59,9 +68,10 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=ref,event=branch
+            type=ref,event=branch,enable=${{ github.ref != 'refs/heads/develop' }}
             type=sha,prefix=sha-
-            type=raw,value=${{ steps.changelog.outputs.tag }}
+            type=raw,value=${{ steps.changelog.outputs.tag }},enable=${{ github.ref != 'refs/heads/develop' }}
+            type=raw,value=${{ steps.changelog.outputs.dev_tag }},enable=${{ github.ref == 'refs/heads/develop' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -72,6 +82,7 @@ jobs:
           labels: ${{ steps.docker_meta.outputs.labels }}
 
       - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_DATE: ${{ steps.changelog.outputs.date }}

@@ -13,6 +13,8 @@
 - Menambahkan GitHub Actions untuk membuat GitHub Release otomatis dari push ke branch `main` dan `release/*`.
 - Menambahkan build dan push Docker image otomatis ke GitHub Container Registry (GHCR).
 - Membuat versi aplikasi pada footer otomatis membaca entri terbaru `changelog.txt`.
+- Menambahkan entrypoint Docker untuk membuat folder upload dan mengatur permission Apache saat container dimulai.
+- Menambahkan build package branch `develop` dengan tag `dev-<tahun>-1.0.0` di GHCR.
 
 2025-12-25
 - Codeigniter 3.3.0 support php 8.4

@@ -28,6 +28,8 @@ docker compose up --build -d
 
 Aplikasi dapat diakses melalui [http://localhost:8080](http://localhost:8080). Service `db` menggunakan MariaDB 10.4 dan menyimpan data secara persistent di folder `./database`. Pada inisialisasi pertama, dump `zyacbt-public-2024-05-05-tanpa-database.sql` diimpor otomatis.
 
+Entrypoint Docker otomatis menyiapkan permission untuk folder `uploads`, `public/uploads`, cache, dan log setiap container dimulai. Pengaturan ini hanya berlaku di Docker dan tidak mengubah cara aplikasi dijalankan menggunakan XAMPP.
+
 Perintah operasional yang umum digunakan:
 
 ```bash
