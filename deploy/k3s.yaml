@@ -1,0 +1,175 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zyacbt
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: zyacbt-db
+  namespace: zyacbt
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: zyacbt-uploads
+  namespace: zyacbt
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zyacbt-db
+  namespace: zyacbt
+spec:
+  type: ClusterIP
+  selector:
+    app: zyacbt-db
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: 3306
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zyacbt-db
+  namespace: zyacbt
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: zyacbt-db
+  template:
+    metadata:
+      labels:
+        app: zyacbt-db
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:10.4
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MYSQL_DATABASE
+              value: zyacbtpublic
+            - name: MYSQL_USER
+              value: zyacbt
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: zyacbt-db
+                  key: password
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: zyacbt-db
+                  key: root-password
+          ports:
+            - name: mysql
+              containerPort: 3306
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -u root -p\"$MYSQL_ROOT_PASSWORD\" --silent"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d/01-zyacbt.sql
+              subPath: zyacbt.sql
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: zyacbt-db
+        - name: init-sql
+          configMap:
+            name: zyacbt-db-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zyacbt
+  namespace: zyacbt
+spec:
+  type: LoadBalancer
+  selector:
+    app: zyacbt
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zyacbt
+  namespace: zyacbt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zyacbt
+  template:
+    metadata:
+      labels:
+        app: zyacbt
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox:latest
+          command: ["sh", "-c", "until nc -z zyacbt-db 3306; do echo waiting for database; sleep 2; done"]
+      containers:
+        - name: app
+          image: docker.io/library/zyacbt:develop-2c0618f-loginfix
+          imagePullPolicy: Never
+          env:
+            - name: DB_HOST
+              value: zyacbt-db
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_DATABASE
+              value: zyacbtpublic
+            - name: DB_USERNAME
+              value: zyacbt
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: zyacbt-db
+                  key: password
+          ports:
+            - name: http
+              containerPort: 80
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          volumeMounts:
+            - name: uploads
+              mountPath: /var/www/html/uploads
+            - name: uploads
+              mountPath: /var/www/html/public/uploads
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: zyacbt-uploads

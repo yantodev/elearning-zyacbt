@@ -39,10 +39,14 @@ if (is_readable($changelog_file)) {
 | a PHP script and you can easily do that on your own.
 |
 */
-// asli
-// $config['base_url'] = "http://".$_SERVER['HTTP_HOST'].str_replace(basename($_SERVER['SCRIPT_NAME']),"",$_SERVER['SCRIPT_NAME']);
-$root=(isset($_SERVER['HTTPS']) ? "https://" : "http://").$_SERVER['HTTP_HOST'];
-$root.= str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']);
+// Hormati protokol asli ketika aplikasi berada di balik reverse proxy/Cloudflare.
+$forwarded_proto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+$forwarded_proto = strtolower(trim(explode(',', $forwarded_proto)[0]));
+$https_enabled = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+$scheme = ($forwarded_proto === 'https' || (!$forwarded_proto && $https_enabled)) ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$root = $scheme . '://' . $host;
+$root .= str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']);
 $config['base_url'] = $root;
 
 /*
