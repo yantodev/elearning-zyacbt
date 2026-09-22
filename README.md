@@ -86,6 +86,15 @@ CI juga menjalankan `scripts/smoke-docker.sh` dan `scripts/smoke-logout.sh` untu
 
 Versi aplikasi tersimpan di file `VERSION` dengan format `MAJOR.MINOR.PATCH`. File ini dipakai oleh footer aplikasi dan GitHub Actions untuk penamaan Docker image.
 
+Versi dapat dinaikkan menggunakan script berikut. Tanpa argumen, script menaikkan patch version:
+
+```bash
+scripts/update-version.sh
+scripts/update-version.sh minor
+scripts/update-version.sh 2.0.0
+scripts/update-version.sh patch --dry-run
+```
+
 ### Release menggunakan tag
 
 Untuk membuat release production, pastikan nilai `VERSION` sama dengan tag semver, lalu push tag tersebut:
