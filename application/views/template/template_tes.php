@@ -11,6 +11,7 @@
 <?php if ($this->config->item('csrf_protection')): ?>
 	<meta name="csrf-token-name" content="<?php echo html_escape($this->security->get_csrf_token_name()); ?>">
 	<meta name="csrf-token" content="<?php echo html_escape($this->security->get_csrf_hash()); ?>">
+	<meta name="csrf-cookie-name" content="<?php echo html_escape(config_item('csrf_cookie_name')); ?>">
 <?php endif; ?>
     <meta name="google" value="notranslate" />
     <!-- Bootstrap 3.3.4 -->
@@ -46,7 +47,7 @@
     <!-- AdminLTE App -->
     <script src="<?php echo base_url(); ?>public/plugins/adminlte/js/app.min.js" type="text/javascript"></script>
 
-    <script src="<?php echo base_url(); ?>public/app.js" type="text/javascript"></script>
+    <script src="<?php echo base_url(); ?>public/app.js?v=csrf-fix-1" type="text/javascript"></script>
 
     <script src="<?php echo base_url(); ?>public/plugins/datatables/jquery.dataTables.min.js" type="text/javascript"></script>
     <script src="<?php echo base_url(); ?>public/plugins/datatables/dataTables.reload.js" type="text/javascript"></script>
@@ -54,8 +55,6 @@
     <script src="<?php echo base_url(); ?>public/plugins/datatables/extensions/Responsive/js/dataTables.responsive.min.js" type="text/javascript"></script>
 
     <script src="<?php echo base_url(); ?>public/plugins/pnotify/pnotify.custom.min.js" type="text/javascript"></script>
-    <script src="<?php echo base_url(); ?>public/app.js" type="text/javascript"></script>
-    
     <!-- membuat gambar responsive pada soal -->
     <style type="text/css">
       #isi-tes-soal img {

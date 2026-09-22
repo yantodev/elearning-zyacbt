@@ -127,10 +127,12 @@
         $.ajax({
             url:'<?php echo site_url().'/'.$url; ?>/get_tes_soal_by_tessoal/'+$('#tes-soal-id').val(),
             type:"POST",
+            data:$('#form-kerjakan').serialize(),
             cache: false,
             timeout: 10000,
+            dataType:"json",
             success:function(respon){
-                var data = $.parseJSON(respon);
+                var data = respon;
                 if(data.data==1){
                     // Mengubah nilai ragu-ragu di database
                     if($('#tes-soal-ragu').val()==0){
@@ -141,10 +143,12 @@
                     $.ajax({
                             url:'<?php echo site_url().'/'.$url; ?>/update_tes_soal_ragu/'+$('#tes-soal-id').val()+'/'+ragu,
                             type:"POST",
+                            data:$('#form-kerjakan').serialize(),
                             cache: false,
                             timeout: 5000,
+                            dataType:"json",
                             success:function(respon){
-                                var data = $.parseJSON(respon);
+                                var data = respon;
                                 if(data.data==1){
                                     notify_success('Jawaban Ragu-ragu berhasil diubah');
                                 }
@@ -208,10 +212,12 @@
         $.ajax({
             url:'<?php echo site_url().'/'.$url; ?>/get_soal_by_tessoal/'+tessoal_id+'/'+$('#tes-user-id').val(),
             type:"POST",
+            data:$('#form-kerjakan').serialize(),
             cache: false,
             timeout: 10000,
+            dataType:"json",
             success:function(respon){
-                var data = $.parseJSON(respon);
+                var data = respon;
                 if(data.data==1){
                     $('#tes-soal-id').val(data.tes_soal_id);
                     $('#tes-soal-nomor').val(data.tes_soal_nomor);

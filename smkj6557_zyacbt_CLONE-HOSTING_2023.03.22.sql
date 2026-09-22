@@ -341,7 +341,6 @@ CREATE TABLE `user` (
 --
 
 INSERT INTO `user` (`id`, `username`, `password`, `nama`, `opsi1`, `opsi2`, `keterangan`, `level`, `ts`) VALUES
-(1, 'masipnu', '4c02fa55df114b1bb0d237541a5242bb70915a69', 'Ipnu Masyaid', '', '', 'Developer', 'admin', '2015-07-29 18:12:03'),
 (4, 'demus', '4c02fa55df114b1bb0d237541a5242bb70915a69', 'Dewi Mustikasari', '', '', 'Admin-1', 'admin', '2018-03-30 12:58:55'),
 (5, 'wawan', '4c02fa55df114b1bb0d237541a5242bb70915a69', 'Baiatur Ridhwan', '', '', 'Admin-2', 'admin', '2019-12-12 02:53:12');
 

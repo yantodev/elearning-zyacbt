@@ -1,4 +1,6 @@
 2026-09-22
+- Menghapus akun contributor lama `masipnu` dari dump database.
+- Memperbaiki navigasi Soal Selanjutnya yang gagal karena token CSRF tidak ikut terkirim pada request AJAX.
 - Menambahkan theme UI modern responsif untuk halaman publik, ujian, dan admin.
 - Memperbarui tampilan navigasi, form, tabel, card, modal, dashboard, dan halaman login secara konsisten.
 - Menambahkan satu sumber versi semver melalui file `VERSION` untuk footer dan Docker image.
