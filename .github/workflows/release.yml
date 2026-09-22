@@ -3,9 +3,9 @@ name: Automatic Release
 on:
   push:
     branches:
-      - main
-      - 'release/*'
       - develop
+    tags:
+      - 'v*.*.*'
 
 permissions:
   contents: write
@@ -42,15 +42,26 @@ jobs:
             exit 1
           fi
 
-          release_tag="v${release_date//-/.}-build.${GITHUB_RUN_NUMBER}"
           app_semver="$(tr -d '\r\n' < VERSION)"
           if [[ ! "$app_semver" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Format VERSION tidak valid: $app_semver" >&2
             exit 1
           fi
+
+          release_tag=""
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            release_tag="$GITHUB_REF_NAME"
+            tag_semver="${release_tag#v}"
+            if [[ ! "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ || "$tag_semver" != "$app_semver" ]]; then
+              echo "Tag $release_tag harus sesuai dengan VERSION ($app_semver)." >&2
+              exit 1
+            fi
+          fi
+
           dev_tag="dev-${release_date:0:4}-${app_semver}"
           echo "date=$release_date" >> "$GITHUB_OUTPUT"
           echo "tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "version=$app_semver" >> "$GITHUB_OUTPUT"
           echo "dev_tag=$dev_tag" >> "$GITHUB_OUTPUT"
 
       - name: Login ke GitHub Container Registry
@@ -66,10 +77,9 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=ref,event=branch,enable=${{ github.ref != 'refs/heads/develop' }}
+            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
             type=sha,prefix=sha-
-            type=raw,value=${{ steps.changelog.outputs.tag }},enable=${{ github.ref != 'refs/heads/develop' }}
+            type=raw,value=${{ steps.changelog.outputs.version }},enable=${{ github.ref_type == 'tag' }}
             type=raw,value=${{ steps.changelog.outputs.dev_tag }},enable=${{ github.ref == 'refs/heads/develop' }}
 
       - name: Build and push Docker image
@@ -81,7 +91,7 @@ jobs:
           labels: ${{ steps.docker_meta.outputs.labels }}
 
       - name: Create GitHub Release
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
+        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_DATE: ${{ steps.changelog.outputs.date }}

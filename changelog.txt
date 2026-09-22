@@ -3,6 +3,7 @@
 - Memindahkan konfigurasi encryption key dan kredensial Docker ke environment variable.
 - Menambahkan proteksi eksekusi script pada folder `uploads` dan `public/uploads`.
 - Menambahkan workflow validation untuk syntax PHP, regression check PHP 8.4, dan konfigurasi Docker Compose.
+- Mengubah release production menjadi tag-driven dengan validasi kesesuaian tag terhadap `VERSION`.
 - Menambahkan compose production immutable dengan volume upload, health check, serta script backup dan restore database.
 - Mengaktifkan CSRF protection pada compose dan seluruh template/AJAX utama.
 - Menambahkan token CSRF otomatis pada form POST biasa agar alur non-AJAX tetap berjalan.

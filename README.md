@@ -67,6 +67,17 @@ CI juga menjalankan `scripts/smoke-docker.sh` untuk memeriksa endpoint HTTP, CSR
 
 Versi aplikasi tersimpan di file `VERSION` dengan format `MAJOR.MINOR.PATCH`. File ini dipakai oleh footer aplikasi dan GitHub Actions untuk penamaan Docker image.
 
+### Release menggunakan tag
+
+Untuk membuat release production, pastikan nilai `VERSION` sama dengan tag semver, lalu push tag tersebut:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+GitHub Actions akan membaca deskripsi terbaru dari `changelog.txt`, membuat GitHub Release, dan mempublikasikan image GHCR dengan tag `1.0.0` serta `latest`. Push ke `develop` hanya membuat image development dengan tag `dev-<tahun>-<versi>`.
+
 ![](https://achmadlutfi.files.wordpress.com/2017/10/halaman-login-zya-cbt.png?w=620&h=508)
 
 Alhamdulillah, setelah berkutat dengan kode kode yang suka mem php dalam waktu yang cukup lama. Akhirnya aplikasi ujian online atau biasa kita kenal dengan nama ujian berbasis komputer telah diluncurkan. Aplikasi ini diberi nama ZYA CBT.

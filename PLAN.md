@@ -14,7 +14,7 @@ Dokumen ini menjadi acuan persiapan upgrade. Setiap tahap harus diuji di branch 
 ## Prioritas 1 — Versi dan Dependency
 
 - [x] Buat satu sumber versi pada file `VERSION` dengan format `MAJOR.MINOR.PATCH`.
-- [x] Gunakan sumber versi tersebut untuk footer dan Docker tag; GitHub Release tetap memakai tanggal changelog sebagai identitas historis.
+- [x] Gunakan sumber versi tersebut untuk footer dan Docker tag; GitHub Release production dipicu tag `vMAJOR.MINOR.PATCH` yang harus sama dengan `VERSION`.
 - [x] Audit dasar patch kompatibilitas CodeIgniter 3 terhadap PHP 8.4 melalui regression check dan lint seluruh PHP.
 - [x] Uji upgrade MariaDB 10.4 ke MariaDB 10.11 menggunakan dump dan direktori sementara di `/tmp`; `./database` tidak disentuh.
 - [ ] Periksa dependency Composer dan hilangkan library deprecated secara bertahap.
