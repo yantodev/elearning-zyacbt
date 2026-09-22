@@ -1,0 +1,48 @@
+services:
+  app:
+    image: ${APP_IMAGE:?APP_IMAGE wajib diatur di .env}
+    ports:
+      - "8080:80"
+    environment:
+      CI_ENV: production
+      CSRF_PROTECTION: ${CSRF_PROTECTION:-1}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:?DB_DATABASE wajib diatur di .env}
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME wajib diatur di .env}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib diatur di .env}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY wajib diatur di .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - app_prod_uploads:/var/www/html/uploads
+      - app_prod_public_uploads:/var/www/html/public/uploads
+      - app_prod_cache:/var/www/html/application/cache
+      - app_prod_logs:/var/www/html/application/logs
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 80) ? 0 : 1);"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  db:
+    image: mariadb:10.4
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:?DB_DATABASE wajib diatur di .env}
+      MYSQL_USER: ${DB_USERNAME:?DB_USERNAME wajib diatur di .env}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib diatur di .env}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD wajib diatur di .env}
+    volumes:
+      - ./database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  app_prod_uploads:
+  app_prod_public_uploads:
+  app_prod_cache:
+  app_prod_logs:

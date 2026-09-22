@@ -1,3 +1,5 @@
 application/vendor/
 .codex/
 .idea/
+.env
+backups/

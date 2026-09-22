@@ -10,6 +10,7 @@ class Modul_filemanager extends Member_Controller {
 		$this->load->model('cbt_modul_model');
 		$this->load->helper('directory');
 		$this->load->helper('file');
+		$this->load->library('upload_service');
 
 		parent::cek_akses($this->kode_menu);
 	}
@@ -28,18 +29,23 @@ class Modul_filemanager extends Member_Controller {
 		$this->form_validation->set_rules('tambah-dir', 'Direktori','required|strip_tags');
         
         if($this->form_validation->run() == TRUE){
-            $dir = $this->input->post('tambah-dir', true);
-            $posisi = $this->input->post('tambah-posisi', true);
-            $posisi = $this->config->item('upload_path').'/'.$posisi;
+            $dir = $this->upload_service->normalize_relative_path($this->input->post('tambah-dir', true));
+            $posisi = $this->upload_service->normalize_relative_path($this->input->post('tambah-posisi', true));
+            $parent = $this->upload_service->directory($posisi);
 
-            if(is_dir($posisi.'/'.$dir)){
-            	$status['status'] = 0;
-            	$status['pesan'] = 'Direktori sudah ada, silahkan cek kembali';
-            }else{
-            	mkdir($posisi.'/'.$dir);
+			if ($dir === false || strpos($dir, DIRECTORY_SEPARATOR) !== false || $parent === false) {
+				$status['status'] = 0;
+				$status['pesan'] = 'Nama atau lokasi direktori tidak valid';
+			} elseif(is_dir($parent.DIRECTORY_SEPARATOR.$dir)){
+				$status['status'] = 0;
+				$status['pesan'] = 'Direktori sudah ada, silahkan cek kembali';
+			}elseif(@mkdir($parent.DIRECTORY_SEPARATOR.$dir, 0775)){
 
-            	$status['status'] = 1;
-            	$status['pesan'] = 'Direktori berhasil dibuat';
+				$status['status'] = 1;
+				$status['pesan'] = 'Direktori berhasil dibuat';
+			} else {
+				$status['status'] = 0;
+				$status['pesan'] = 'Direktori tidak dapat dibuat';
             }
             
         }else{
@@ -51,36 +57,16 @@ class Modul_filemanager extends Member_Controller {
     }
 
     function upload_file(){
-    	$posisi = $this->input->post('upload-posisi', true);
-    	$posisi = $this->config->item('upload_path').'/'.$posisi;
-
-    	$field_name = 'upload-file';
-        if(!empty($_FILES[$field_name]['name'])){
-	    	$config['upload_path'] = $posisi;
-		    $config['allowed_types'] = 'jpg|png|jpeg|mp3';
-		    $config['max_size']	= '0';
-		    $config['overwrite'] = true;
-		    $config['file_name'] = strtolower($_FILES[$field_name]['name']);
-
-		    if(file_exists($posisi.'/'.$config['file_name'])){
-        		$status['status'] = 0;
-            	$status['pesan'] = 'Nama file sudah terdapat pada direktori, silahkan ubah nama file yang akan di upload';
-	    	}else{
-		        $this->load->library('upload', $config);
-	            if (!$this->upload->do_upload($field_name)){
-	            	$status['status'] = 0;
-	            	$status['pesan'] = $this->upload->display_errors();
-	            }else{
-	            	$upload_data = $this->upload->data();
-
-	            	$status['status'] = 1;
-	                $status['pesan'] = 'File '.$upload_data['file_name'].' BERHASIL di IMPORT';
-	            }   	
-	    	}     
-        }else{
-        	$status['status'] = 0;
-            $status['pesan'] = 'Pilih terlebih dahulu file yang akan di upload';
-        }
+		$posisi = $this->input->post('upload-posisi', true);
+		$upload_data = $this->upload_service->upload('upload-file', $posisi, array('jpg', 'png', 'jpeg', 'mp3'), 128 * 1024 * 1024);
+		if ($upload_data === false) {
+			$status['status'] = 0;
+			$status['pesan'] = $this->upload_service->get_error();
+		} else {
+			$status['status'] = 1;
+			$status['pesan'] = 'File '.$upload_data['file_name'].' BERHASIL di IMPORT';
+			log_message('info', 'Upload file manager berhasil: '.$upload_data['relative_path']);
+		}
         echo json_encode($status);
     }
 
@@ -90,22 +76,17 @@ class Modul_filemanager extends Member_Controller {
 		$this->form_validation->set_rules('hapus-file', 'File','required|strip_tags');
         
         if($this->form_validation->run() == TRUE){
-            $file = $this->input->post('hapus-file', true);
-            $posisi = $this->input->post('hapus-posisi', true);
-            $posisi = $this->config->item('upload_path').'/'.$posisi;
+	            $file = $this->input->post('hapus-file', true);
+	            $posisi = $this->input->post('hapus-posisi', true);
 
-            if(is_dir($posisi.'/'.$file)){
-            	delete_files($posisi.'/'.$file, TRUE);
-            	rmdir($posisi.'/'.$file);
-
-            	$status['status'] = 1;
-            	$status['pesan'] = 'Direktori berhasil dihapus ';
-            }else{
-            	unlink($posisi.'/'.$file);
-
-            	$status['status'] = 1;
-            	$status['pesan'] = 'File berhasil dihapus ';
-            }
+	            if ($this->upload_service->remove($posisi, $file)) {
+				$status['status'] = 1;
+				$status['pesan'] = 'File atau direktori berhasil dihapus';
+				log_message('info', 'Hapus file manager berhasil: '.$posisi.'/'.$file);
+	            } else {
+				$status['status'] = 0;
+				$status['pesan'] = $this->upload_service->get_error();
+	            }
             
         }else{
             $status['status'] = 0;
@@ -133,7 +114,11 @@ class Modul_filemanager extends Member_Controller {
 		$rows = $this->get_rows();
 
 		// run query to get user listing
-		$posisi = $this->config->item('upload_path').'/'.$posisi;
+		$posisi = $this->upload_service->directory($posisi);
+		if ($posisi === false) {
+			echo json_encode(array('sEcho' => intval($_GET['sEcho'] ?? 0), 'iTotalRecords' => 0, 'iTotalDisplayRecords' => 0, 'aaData' => array()));
+			return;
+		}
 		$query = directory_map($posisi, 1);
 
 	    // get result after running query and put it in array

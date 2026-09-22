@@ -4,16 +4,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $config['upload_path'] = 'uploads';
 $config['site_name'] = 'Computer Based-Test';
 
-// Ambil versi dari entri tanggal terbaru pada changelog agar footer selalu sesuai source code.
+// Ambil versi dari VERSION agar footer, image, dan release memakai sumber yang sama.
 $config['site_version'] = 'dev';
-$changelog_file = dirname(APPPATH).DIRECTORY_SEPARATOR.'changelog.txt';
-if (is_readable($changelog_file)) {
-	$changelog_lines = file($changelog_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-	if (is_array($changelog_lines) && isset($changelog_lines[0])) {
-		$latest_version = trim($changelog_lines[0]);
-		if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $latest_version)) {
-			$config['site_version'] = $latest_version;
-		}
+$version_file = dirname(APPPATH).DIRECTORY_SEPARATOR.'VERSION';
+if (is_readable($version_file)) {
+	$version = trim(file_get_contents($version_file));
+	if (preg_match('/^\d+\.\d+\.\d+$/', $version)) {
+		$config['site_version'] = $version;
 	}
 }
 
@@ -350,7 +347,7 @@ $config['cache_query_string'] = FALSE;
 | https://codeigniter.com/user_guide/libraries/encryption.html
 |
 */
-$config['encryption_key'] = 'sdjs djhas dhkajshdfsdfsKJKAhsa ahdsa d*&^876ad a7dud kahdkjas dias76dkashd sd dkfsdfsdfsdfsdjashdja shdkjhKJHSKjd s8d9789sd sd';
+$config['encryption_key'] = getenv('ENCRYPTION_KEY') ?: '';
 
 /*
 |--------------------------------------------------------------------------
@@ -495,11 +492,11 @@ $config['global_xss_filtering'] = FALSE;
 | 'csrf_regenerate' = Regenerate token on every submission
 | 'csrf_exclude_uris' = Array of URIs which ignore CSRF checks
 */
-$config['csrf_protection'] = FALSE;
+$config['csrf_protection'] = filter_var(getenv('CSRF_PROTECTION') ?: '1', FILTER_VALIDATE_BOOLEAN);
 $config['csrf_token_name'] = 'csrf_test_name';
 $config['csrf_cookie_name'] = 'csrf_cookie_name';
 $config['csrf_expire'] = 7200;
-$config['csrf_regenerate'] = TRUE;
+$config['csrf_regenerate'] = FALSE;
 $config['csrf_exclude_uris'] = array();
 
 /*

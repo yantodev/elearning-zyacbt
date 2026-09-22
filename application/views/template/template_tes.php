@@ -8,6 +8,10 @@
 	<meta name="description" content="Aplikasi Ujian Online ZAYCBT" />
 	<meta name="keywords" content="Aplikasi Ujian Online ZYACBT" />
 	<meta name="author" content="Achmad Lutfi" />
+<?php if ($this->config->item('csrf_protection')): ?>
+	<meta name="csrf-token-name" content="<?php echo html_escape($this->security->get_csrf_token_name()); ?>">
+	<meta name="csrf-token" content="<?php echo html_escape($this->security->get_csrf_hash()); ?>">
+<?php endif; ?>
     <meta name="google" value="notranslate" />
     <!-- Bootstrap 3.3.4 -->
     <link href="<?php echo base_url(); ?>public/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />

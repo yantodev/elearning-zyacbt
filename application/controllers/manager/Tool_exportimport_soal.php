@@ -18,6 +18,7 @@ class Tool_exportimport_soal extends Member_Controller {
 		$this->load->model('cbt_modul_model');
 		$this->load->model('cbt_soal_model');
 		$this->load->model('cbt_jawaban_model');
+		$this->load->library('upload_service');
 
 		parent::cek_akses($this->kode_menu);
 	}
@@ -167,18 +168,11 @@ class Tool_exportimport_soal extends Member_Controller {
 	        // Cek apakah masih ada topik atau tidak, jika topik masih ada, maka proses digagalkan
 	        if($this->cbt_topik_model->count_all()->row()->hasil>0){
 	        	$data['error'] = 'Data Soal Gagal di Import. Masih ada Topik di ZYA CBT. Silahkan hapus Topik terlebih dahulu.';
-	        }else{
-	        	$config['upload_path'] = './public/uploads/';
-		        $config['allowed_types'] = 'zip';
-		        $config['max_size']	= '0';
-		        $config['overwrite'] = true;
-		        $config['file_name'] = $_FILES['userfile']['name'];
-
-	        	$this->load->library('upload', $config);
-	            if (!$this->upload->do_upload()){
-	            	$data['error_upload'] = $this->upload->display_errors().'Tipe file yang di upload adalah '.$_FILES['userfile']['type'];
-	            }else{
-	            	$upload_data = $this->upload->data();
+		}else{
+			$upload_data = $this->upload_service->upload('userfile', 'imports', array('zip'), 128 * 1024 * 1024);
+			if ($upload_data === false){
+				$data['error_upload'] = $this->upload_service->get_error();
+			}else{
 	                $data['filename'] = 'File '.$upload_data['file_name'].' BERHASIL di UPLOAD';
 	                        
 	                // disini proses import data soal dimulai
@@ -189,10 +183,18 @@ class Tool_exportimport_soal extends Member_Controller {
 
 	                // Extract file hasil upload
 	                // jika tidak bisa extract, maka proses digagalkan
-	                $zip = new ZipArchive;
+				$zip = new ZipArchive;
+					$import_path = $this->upload_service->directory('import', true);
  
-			        if ($zip->open($config['upload_path'].$upload_data['file_name']) === TRUE)			        {
-			            $zip->extractTo($config['upload_path'].'import/');
+			        if ($import_path !== false && $zip->open($upload_data['full_path']) === TRUE) {
+			            if (!$this->extract_zip_safely($zip, $import_path)) {
+			            	$data['error'] = 'Data Soal Rusak. Arsip mengandung path yang tidak valid.';
+			            	$zip->close();
+			            	@unlink($upload_data['full_path']);
+			            	$this->rmdir_recursive($import_path);
+			            	$this->template->display_admin($this->kelompok.'/tool_exportimport_soal_view', 'Export / Import Data Soal', $data);
+			            	return;
+			            }
 			            $zip->close();
 
 			            $error_sql = 0;
@@ -204,8 +206,8 @@ class Tool_exportimport_soal extends Member_Controller {
 			            $this->cbt_modul_model->empty_table();
 			            
 			            // Import SQL
-			            if (file_exists($config['upload_path'].'import/zyacbt-soal.sql')) {
-			            	$isi_file = file_get_contents($config['upload_path'].'import/zyacbt-soal.sql'); 
+		            if (file_exists($import_path.DIRECTORY_SEPARATOR.'zyacbt-soal.sql')) {
+					$isi_file = file_get_contents($import_path.DIRECTORY_SEPARATOR.'zyacbt-soal.sql');
 	          				//$string_query = rtrim( $isi_file, "\n;" );
 	          				//$string_query = str_replace('_ci;', ');', $isi_file);
 	          				$array_query = explode($delimiter, $isi_file);
@@ -236,8 +238,8 @@ class Tool_exportimport_soal extends Member_Controller {
 			            // Pindahkan folder gambar dan audio ke uploads jika proses import SQL berhasil
 			            if($error_sql!=1 and $count_import>0){
 			            	// Cek apakah folder import/uploads ada
-			            	if(is_dir($config['upload_path'].'import/uploads/')){
-			            		$this->recurse_copy($config['upload_path'].'import/uploads/', './uploads/');
+				if(is_dir($import_path.DIRECTORY_SEPARATOR.'uploads/')){
+					$this->recurse_copy($import_path.DIRECTORY_SEPARATOR.'uploads/', './uploads/');
 			            	}
 							
 							$data['filename'] = $data['filename'].'<br />Data Soal Berhasil Di Import. Silahkan cek Soal dan Jawaban.';
@@ -252,17 +254,59 @@ class Tool_exportimport_soal extends Member_Controller {
 			        	$data['error'] = 'Data Soal Rusak. Silahkan cek kembali Data yang akan di import.';
 			        }
 
-			        if (file_exists($config['upload_path'].'import')) {
-			        	$this->rmdir_recursive($config['upload_path'].'import');
-			        }
+		        if ($import_path !== false && file_exists($import_path)) {
+				$this->rmdir_recursive($import_path);
+		        }
+		        @unlink($upload_data['full_path']);
+		        log_message('info', 'Import paket soal selesai: '.$upload_data['file_name']);
 	            }   
 	        }       
         }else{
         	$data['error_upload'] = 'Pilih File yang akan di IMPORT';
         }
 
-        $this->template->display_admin($this->kelompok.'/tool_exportimport_soal_view', 'Export / Import Data Soal', $data);	
-    }
+	$this->template->display_admin($this->kelompok.'/tool_exportimport_soal_view', 'Export / Import Data Soal', $data);	
+	}
+
+	private function extract_zip_safely($zip, $destination){
+		for ($index = 0; $index < $zip->numFiles; $index++) {
+			$entry = $zip->getNameIndex($index);
+			$is_directory = substr($entry, -1) === '/';
+			$relative = $this->upload_service->normalize_relative_path($entry);
+			if ($relative === false || $relative === '') {
+				return false;
+			}
+
+			$target = $destination.DIRECTORY_SEPARATOR.$relative;
+			if ($is_directory) {
+				if (!is_dir($target) && !@mkdir($target, 0775, true)) {
+					return false;
+				}
+				continue;
+			}
+
+			$parent = dirname($target);
+			if (!is_dir($parent) && !@mkdir($parent, 0775, true)) {
+				return false;
+			}
+			$input = $zip->getStream($entry);
+			$output = @fopen($target, 'wb');
+			if ($input === false || $output === false) {
+				if (is_resource($input)) {
+					fclose($input);
+				}
+				if (is_resource($output)) {
+					fclose($output);
+				}
+				return false;
+			}
+			stream_copy_to_stream($input, $output);
+			fclose($input);
+			fclose($output);
+		}
+
+		return true;
+	}
 
     function recurse_copy($src,$dst) {
 		$dir = opendir($src);

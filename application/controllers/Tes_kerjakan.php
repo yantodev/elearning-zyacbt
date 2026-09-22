@@ -209,7 +209,7 @@ class Tes_kerjakan extends Tes_Controller {
             $status['status'] = 0;
             $status['pesan'] = validation_errors();
         }
-        
+
         echo json_encode($status);
     }
 
@@ -321,6 +321,10 @@ class Tes_kerjakan extends Tes_Controller {
         }else{
             $status['status'] = 0;
             $status['pesan'] = validation_errors();
+        }
+
+        if (!empty($status['status']) && (int) $status['status'] === 1) {
+            log_message('info', 'Jawaban tes disimpan: user='.$this->user_id.', tes_soal='.$this->input->post('tes-soal-id', TRUE));
         }
         
         echo json_encode($status);

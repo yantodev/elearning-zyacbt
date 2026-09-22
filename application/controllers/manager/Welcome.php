@@ -54,11 +54,14 @@ class Welcome extends CI_Controller {
 		
 		$login = $this->access->login($username, $password, $this->input->ip_address());
 		if($login==1){
+			log_message('info', 'Login operator berhasil: '.$username);
 			return TRUE;
 		}else if($login==2){
+			log_message('warning', 'Login operator gagal karena password salah: '.$username);
 			$this->form_validation->set_message('check_login','Password yang dimasukkan salah');
 			return FALSE;
 		}else{
+			log_message('warning', 'Login operator gagal karena username tidak dikenal: '.$username);
 			$this->form_validation->set_message('check_login','Username yang dimasukkan tidak dikenal');
 			return FALSE;
 		}

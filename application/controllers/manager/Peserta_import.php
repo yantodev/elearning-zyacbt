@@ -9,6 +9,7 @@ class Peserta_import extends Member_Controller {
 		parent:: __construct();
 		$this->load->model('cbt_user_grup_model');
 		$this->load->model('cbt_user_model');
+		$this->load->library('upload_service');
 
         parent::cek_akses($this->kode_menu);
 	}
@@ -26,34 +27,21 @@ class Peserta_import extends Member_Controller {
         $data['error'] = '';
         $data['error_upload'] = '';
 
-        if(!empty($_FILES['userfile']['name'])){
-			$config['upload_path'] = './public/uploads/';
-	        $config['allowed_types'] = 'xlsx';
-	        $config['max_size']	= '0';
-	        $config['overwrite'] = true;
-	        $config['file_name'] = $_FILES['userfile']['name'];
-	            
-	        $this->load->library('upload', $config);
-            if (!$this->upload->do_upload()){
-            	$data['error_upload'] = $this->upload->display_errors().'Tipe file yang di upload adalah '.$_FILES['userfile']['type'];
-            }else{
-            	$upload_data = $this->upload->data();
-                $data['filename'] = 'File '.$upload_data['file_name'].' BERHASIL di IMPORT';
-                        
-                // disini proses import data
-                $data['hasil'] = $this->import_file($upload_data['file_name']);
-            }   
-                    
-        }else{
-        	$data['error_upload'] = 'Pilih File yang akan di IMPORT';
-        }
+		$upload_data = $this->upload_service->upload('userfile', 'imports', array('xlsx'), 128 * 1024 * 1024);
+		if ($upload_data === false){
+			$data['error_upload'] = $this->upload_service->get_error();
+		}else{
+			$data['filename'] = 'File '.$upload_data['file_name'].' BERHASIL di IMPORT';
+			$data['hasil'] = $this->import_file($upload_data['full_path']);
+			@unlink($upload_data['full_path']);
+			log_message('info', 'Import peserta berhasil diproses: '.$upload_data['file_name']);
+		}
         
         $this->template->display_admin($this->kelompok.'/peserta_import_view', 'Import Peserta', $data);
     }
 
-    function import_file($inputfile){
+    function import_file($inputFileName){
         $this->load->library('excel');
-        $inputFileName = './public/uploads/'.$inputfile;
 
         $excel = PHPExcel_IOFactory::load($inputFileName);
         $worksheet = $excel->getSheet(0);

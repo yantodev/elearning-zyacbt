@@ -23,6 +23,8 @@ Pastikan Docker Engine dan Docker Compose v2 sudah terpasang, lalu jalankan dari
 
 ```bash
 mkdir -p database
+cp .env.example .env
+# Sesuaikan password dan ENCRYPTION_KEY di .env sebelum deployment.
 docker compose up --build -d
 ```
 
@@ -37,6 +39,33 @@ docker compose logs -f app  # melihat log aplikasi
 docker compose ps           # melihat status service
 docker compose down         # menghentikan service tanpa menghapus database
 ```
+
+Untuk deployment production, gunakan image immutable tanpa mount source code:
+
+```bash
+cp .env.example .env
+# Isi DB_PASSWORD, DB_ROOT_PASSWORD, ENCRYPTION_KEY, dan APP_IMAGE versi spesifik,
+# misalnya ghcr.io/yantodev/elearning-zyacbt:dev-2026-1.0.0.
+docker compose -f docker-compose.production.yml up -d
+```
+
+Backup dan restore database menggunakan script berikut. Restore meminta konfirmasi karena akan menimpa data:
+
+```bash
+scripts/backup-db.sh
+scripts/restore-db.sh backups/zyacbt-YYYYMMDD-HHMMSS.sql
+```
+
+Validasi keamanan upload dan uji upgrade database dapat dijalankan tanpa menyentuh database development:
+
+```bash
+tests/upload_service.php
+scripts/test-mariadb-upgrade.sh
+```
+
+CI juga menjalankan `scripts/smoke-docker.sh` untuk memeriksa endpoint HTTP, CSRF, directory listing upload, dan permission folder.
+
+Versi aplikasi tersimpan di file `VERSION` dengan format `MAJOR.MINOR.PATCH`. File ini dipakai oleh footer aplikasi dan GitHub Actions untuk penamaan Docker image.
 
 ![](https://achmadlutfi.files.wordpress.com/2017/10/halaman-login-zya-cbt.png?w=620&h=508)
 

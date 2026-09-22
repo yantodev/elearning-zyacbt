@@ -11,6 +11,7 @@ class Modul_import_word extends Member_Controller {
 		$this->load->model('cbt_topik_model');
 		$this->load->model('cbt_jawaban_model');
 		$this->load->model('cbt_soal_model');
+		$this->load->library('upload_service');
 		$this->load->helper('directory');
 		$this->load->helper('file');
 
@@ -398,42 +399,19 @@ class Modul_import_word extends Member_Controller {
         $this->form_validation->set_rules('image-topik-id', 'Topik','required');
 
         if($this->form_validation->run() == TRUE){
-        	$id_topik = $this->input->post('image-topik-id', true);
-	    	$posisi = $this->config->item('upload_path').'/topik_'.$id_topik;
-
-	    	if(!is_dir($posisi)){
-	        	mkdir($posisi);
-	        }
-
-	    	$field_name = 'image-file';
-	        if(!empty($_FILES[$field_name]['name'])){
-		    	$config['upload_path'] = $posisi;
-			    $config['allowed_types'] = 'jpg|png|jpeg|gif';
-			    $config['max_size']	= '0';
-			    $config['overwrite'] = true;
-			    $config['file_name'] = strtolower($_FILES[$field_name]['name']);
-
-			    if(file_exists($posisi.'/'.$config['file_name'])){
-	        		$status['status'] = 0;
-	            	$status['pesan'] = 'Nama file sudah terdapat pada direktori, silahkan ubah nama file yang akan di upload';
-		    	}else{
-			        $this->load->library('upload', $config);
-		            if (!$this->upload->do_upload($field_name)){
-		            	$status['status'] = 0;
-		            	$status['pesan'] = $this->upload->display_errors();
-		            }else{
-		            	$upload_data = $this->upload->data();
-
-		            	$status['status'] = 1;
-		                $status['pesan'] = 'File '.$upload_data['file_name'].' BERHASIL di IMPORT';
-		                $status['image'] = '<img src="'.base_url().$posisi.'/'.$upload_data['file_name'].'" style="max-height: 110px;" />';
-		                $status['image_isi'] = '<img src="'.base_url().$posisi.'/'.$upload_data['file_name'].'" style="max-width: 600px;" />';
-		            }   	
-		    	}     
-	        }else{
-	        	$status['status'] = 0;
-	            $status['pesan'] = 'Pilih terlebih dahulu file yang akan di upload';
-	        }
+		$id_topik = $this->input->post('image-topik-id', true);
+		$relative_path = 'topik_'.$id_topik;
+		$posisi = $this->config->item('upload_path').'/'.$relative_path;
+		$upload_data = $this->upload_service->upload('image-file', $relative_path, array('jpg', 'png', 'jpeg', 'gif'), 128 * 1024 * 1024);
+		if ($upload_data === false){
+			$status['status'] = 0;
+			$status['pesan'] = $this->upload_service->get_error();
+		}else{
+			$status['status'] = 1;
+			$status['pesan'] = 'File '.$upload_data['file_name'].' BERHASIL di IMPORT';
+			$status['image'] = '<img src="'.base_url().$posisi.'/'.$upload_data['file_name'].'" style="max-height: 110px;" />';
+			$status['image_isi'] = '<img src="'.base_url().$posisi.'/'.$upload_data['file_name'].'" style="max-width: 600px;" />';
+		}
         }else{
         	$status['status'] = 0;
             $status['pesan'] = validation_errors();

@@ -1,3 +1,17 @@
+2026-09-22
+- Menambahkan satu sumber versi semver melalui file `VERSION` untuk footer dan Docker image.
+- Memindahkan konfigurasi encryption key dan kredensial Docker ke environment variable.
+- Menambahkan proteksi eksekusi script pada folder `uploads` dan `public/uploads`.
+- Menambahkan workflow validation untuk syntax PHP, regression check PHP 8.4, dan konfigurasi Docker Compose.
+- Menambahkan compose production immutable dengan volume upload, health check, serta script backup dan restore database.
+- Mengaktifkan CSRF protection pada compose dan seluruh template/AJAX utama.
+- Menambahkan token CSRF otomatis pada form POST biasa agar alur non-AJAX tetap berjalan.
+- Menambahkan `Upload_service` untuk validasi MIME, ukuran, ekstensi, nama/path, dan penghapusan file yang aman.
+- Mencegah Zip Slip pada import paket soal.
+- Menggunakan service upload pada file manager, import/export, gambar, dan audio soal.
+- Menambahkan logging untuk login, upload, import, dan penyimpanan jawaban.
+- Menambahkan smoke test Docker, security check upload, prosedur uji upgrade MariaDB 10.4 ke 10.11, dan dokumentasi arsitektur.
+
 2026-09-21
 - Menyinkronkan source code dengan versi terbaru aplikasi ZYA CBT Public.
 - Menambahkan Dockerfile berbasis PHP 8.4 Apache dengan ekstensi mysqli, PDO MySQL, GD, XML, ZIP, dan mbstring.

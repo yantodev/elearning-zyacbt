@@ -13,6 +13,7 @@ class Modul_import extends Member_Controller {
 		$this->load->model('cbt_soal_model');
 		$this->load->helper('directory');
 		$this->load->helper('file');
+		$this->load->library('upload_service');
 
         parent::cek_akses($this->kode_menu);
 	}
@@ -83,33 +84,19 @@ class Modul_import extends Member_Controller {
         $this->form_validation->set_rules('topik', 'Topik','required');
 
         if($this->form_validation->run() == TRUE){
-        	$id_topik = $this->input->post('topik', true);
-	    	$posisi = './public/uploads/';
+		$id_topik = $this->input->post('topik', true);
+		$upload_data = $this->upload_service->upload('userfile', 'imports', array('xlsx'), 128 * 1024 * 1024);
 
-	        if(!empty($_FILES['userfile']['name'])){
-		    	$config['upload_path'] = $posisi;
-			    $config['allowed_types'] = 'xlsx';
-			    $config['max_size']	= '0';
-			    $config['overwrite'] = true;
-			    $config['file_name'] = $_FILES['userfile']['name'];
-
-			    $this->load->library('upload', $config);
-			    if (!$this->upload->do_upload()){
-		        	$status['status'] = 0;
-		            $status['pesan'] = $this->upload->display_errors().'Tipe file yang di upload adalah '.$_FILES['userfile']['type'];
-		        }else{
-		        	$upload_data = $this->upload->data();
-		        	$data['filename'] = 'File '.$upload_data['file_name'].' BERHASIL di IMPORT';
-                    
-                    $status['status'] = 1;
-
-                	// disini proses import data
-                	$status['pesan'] = $this->import_file($upload_data['file_name'], $id_topik);
-		        }      
-	        }else{
-	        	$status['status'] = 0;
-	            $status['pesan'] = 'Pilih terlebih dahulu file yang akan di upload';
-	        }
+		if ($upload_data === false){
+			$status['status'] = 0;
+			$status['pesan'] = $this->upload_service->get_error();
+		}else{
+			$data['filename'] = 'File '.$upload_data['file_name'].' BERHASIL di IMPORT';
+			$status['status'] = 1;
+			$status['pesan'] = $this->import_file($upload_data['full_path'], $id_topik);
+			@unlink($upload_data['full_path']);
+			log_message('info', 'Import soal berhasil diproses: '.$upload_data['file_name']);
+		}
         }else{
         	$status['status'] = 0;
             $status['pesan'] = validation_errors();
@@ -117,9 +104,8 @@ class Modul_import extends Member_Controller {
         echo json_encode($status);
     }
 
-    function import_file($inputfile, $id_topik){
+    function import_file($inputFileName, $id_topik){
         $this->load->library('excel');
-        $inputFileName = './public/uploads/'.$inputfile;
 
         $excel = PHPExcel_IOFactory::load($inputFileName);
         $worksheet = $excel->getSheet(0);
