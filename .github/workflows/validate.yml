@@ -70,6 +70,12 @@ jobs:
       - name: Verify HTTP, CSRF, and upload permissions
         run: scripts/smoke-docker.sh
 
+      - name: Verify logout schema
+        run: scripts/check-logout-schema.sh
+
+      - name: Verify participant logout
+        run: scripts/smoke-logout.sh
+
       - name: Stop development stack
         if: always()
         run: docker compose down -v

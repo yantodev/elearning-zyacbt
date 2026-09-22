@@ -28,6 +28,16 @@ cp .env.example .env
 docker compose up --build -d
 ```
 
+Perintah `--build` cukup dijalankan saat pertama kali atau setelah perubahan
+`Dockerfile` maupun dependency Composer. Untuk perubahan kode aplikasi,
+jalankan tanpa `--build` karena source code sudah di-mount ke container:
+
+```bash
+docker compose up -d
+```
+
+Opsional, gunakan `docker compose up --watch` untuk mengaktifkan Compose Watch.
+
 Aplikasi dapat diakses melalui [http://localhost:8080](http://localhost:8080). Service `db` menggunakan MariaDB 10.4 dan menyimpan data secara persistent di folder `./database`. Pada inisialisasi pertama, dump `zyacbt-public-2024-05-05-tanpa-database.sql` diimpor otomatis.
 
 Entrypoint Docker otomatis menyiapkan permission untuk folder `uploads`, `public/uploads`, cache, dan log setiap container dimulai. Pengaturan ini hanya berlaku di Docker dan tidak mengubah cara aplikasi dijalankan menggunakan XAMPP.
@@ -56,6 +66,15 @@ scripts/backup-db.sh
 scripts/restore-db.sh backups/zyacbt-YYYYMMDD-HHMMSS.sql
 ```
 
+Jika database dibuat dari dump lama dan logout menampilkan error kolom `user_login`, jalankan patch schema berikut setelah backup:
+
+```bash
+scripts/backup-db.sh
+scripts/upgrade-db-schema.sh
+```
+
+Untuk instalasi XAMPP, jalankan isi `scripts/upgrade-db-schema.sql` melalui phpMyAdmin atau client MySQL.
+
 Validasi keamanan upload dan uji upgrade database dapat dijalankan tanpa menyentuh database development:
 
 ```bash
@@ -63,7 +82,7 @@ tests/upload_service.php
 scripts/test-mariadb-upgrade.sh
 ```
 
-CI juga menjalankan `scripts/smoke-docker.sh` untuk memeriksa endpoint HTTP, CSRF, directory listing upload, dan permission folder.
+CI juga menjalankan `scripts/smoke-docker.sh` dan `scripts/smoke-logout.sh` untuk memeriksa endpoint HTTP, CSRF, logout peserta, directory listing upload, dan permission folder.
 
 Versi aplikasi tersimpan di file `VERSION` dengan format `MAJOR.MINOR.PATCH`. File ini dipakai oleh footer aplikasi dan GitHub Actions untuk penamaan Docker image.
 

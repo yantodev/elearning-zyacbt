@@ -26,7 +26,7 @@
                     <h3 class="box-title">Login Operator</h3>
                 </div><!-- /.box-header -->
                 <!-- form start -->
-                <?php echo form_open('welcome/login','id="form-login" class="form-horizontal"')?>
+                <?php echo form_open('manager/welcome/login','id="form-login" class="form-horizontal"')?>
                     <div class="box-body">
 						<div id="form-pesan">
 						</div>
@@ -68,29 +68,31 @@
     $(function () {
         $('#username').focus();   
         
-        $('#btn-login').click(function(){
-            $('#form-login').submit();
-        });
-        
-        $('#form-login').submit(function(){
+        $('#form-login').submit(function(event){
+            event.preventDefault();
             $("#modal-proses").modal('show');
+            $('#btn-login').prop('disabled', true);
                 $.ajax({
                     url:"<?php echo site_url(); ?>/manager/welcome/login",
-     			    type:"POST",
-     			    data:$('#form-login').serialize(),
-     			    cache: false,
-      		        success:function(respon){
-         		    	var obj = $.parseJSON(respon);
+    			    type:"POST",
+    			    data:$('#form-login').serialize(),
+    			    cache: false,
+                    dataType:"json",
+      		        success:function(obj){
       		            if(obj.status==1){
       		                window.open("<?php echo site_url(); ?>/manager/dashboard","_self");
           		        }else{
                             $('#form-pesan').html(pesan_err(obj.error));
                             $("#modal-proses").modal('hide');
+                            $('#btn-login').prop('disabled', false);
           		        }
-         			}
+         			},
+                    error:function(request, status, errorThrown){
+                        $("#modal-proses").modal('hide');
+                        $('#btn-login').prop('disabled', false);
+                        $('#form-pesan').html(pesan_err('Terjadi kesalahan saat memproses login. Silakan coba lagi.'));
+                    }
       		});
-            
-      		return false;
         });    
     });
 </script>

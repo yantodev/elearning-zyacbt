@@ -4,6 +4,11 @@
 - Menambahkan proteksi eksekusi script pada folder `uploads` dan `public/uploads`.
 - Menambahkan workflow validation untuk syntax PHP, regression check PHP 8.4, dan konfigurasi Docker Compose.
 - Mengubah release production menjadi tag-driven dengan validasi kesesuaian tag terhadap `VERSION`.
+- Menambahkan patch schema idempotent untuk database lama yang belum memiliki status login peserta.
+- Memperbaiki error logout pada database lama dan menambahkan regression test login/logout peserta.
+- Memperbaiki login peserta dan operator agar respons HTML error tidak memicu kegagalan `JSON.parse`.
+- Menambahkan penanganan error AJAX dan mencegah submit login ganda.
+- Mengaktifkan bind mount dan Compose Watch agar perubahan source code tidak memerlukan rebuild image.
 - Menambahkan compose production immutable dengan volume upload, health check, serta script backup dan restore database.
 - Mengaktifkan CSRF protection pada compose dan seluruh template/AJAX utama.
 - Menambahkan token CSRF otomatis pada form POST biasa agar alur non-AJAX tetap berjalan.

@@ -71,33 +71,32 @@
           showpassword();
         });
         
-        $('#form-login').submit(function(){
+        $('#form-login').submit(function(event){
+          event.preventDefault();
           $("#modal-proses").modal('show');
+          $('#form-login button[type="submit"]').prop('disabled', true);
             $.ajax({
               url:"<?php echo site_url(); ?>/welcome/login",
      			    type:"POST",
      			    data:$('#form-login').serialize(),
      			    cache: false,
-      		        success:function(respon){
-         		    	var obj = $.parseJSON(respon);
+                    dataType:"json",
+      		        success:function(obj){
       		            if(obj.status==1){
       		                window.open("<?php echo site_url(); ?>/tes_dashboard","_self");
           		        }else{
                             $('#form-pesan').html(pesan_err(obj.error));
                             $("#modal-proses").modal('hide');
+                            $('#form-login button[type="submit"]').prop('disabled', false);
                             $('#username').focus();   
           		        }
          			},
 					error: function(request, status, errorThrown) {
 						$("#modal-proses").modal('hide');
-						// There's been an error, do something with it!
-						// Only use status and errorThrown.
-						// Chances are request will not have anything in it.
-						$('#form-pesan').html(pesan_err("Terjadi Kesalahan Sistem. Silahkan hubungi Administrator.<br/> "+errorThrown));
+                        $('#form-login button[type="submit"]').prop('disabled', false);
+						$('#form-pesan').html(pesan_err("Terjadi Kesalahan Sistem. Silakan coba lagi atau hubungi Administrator."));
 					}
       		});
-            
-      		return false;
-        });    
+        });
     });
 </script>

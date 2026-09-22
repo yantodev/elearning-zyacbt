@@ -18,10 +18,31 @@ services:
       db:
         condition: service_healthy
     volumes:
+      # Source code dipasang sebagai bind mount agar perubahan langsung aktif
+      # tanpa rebuild image. Rebuild hanya diperlukan saat Dockerfile atau
+      # dependency Composer berubah.
       - .:/var/www/html
       - app_vendor_v2:/var/www/html/application/vendor
       - app_cache:/var/www/html/application/cache
       - app_logs:/var/www/html/application/logs
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /var/www/html
+          ignore:
+            - .git/
+            - database/
+            - uploads/
+            - application/vendor/
+            - application/cache/
+            - application/logs/
+        - action: rebuild
+          path: Dockerfile
+        - action: rebuild
+          path: application/composer.json
+        - action: rebuild
+          path: application/composer.lock
 
   db:
     image: mariadb:10.4

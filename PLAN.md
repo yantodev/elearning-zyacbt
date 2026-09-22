@@ -24,6 +24,7 @@ Dokumen ini menjadi acuan persiapan upgrade. Setiap tahap harus diuji di branch 
 - [ ] Tambahkan PHPUnit untuk authentication, authorization, token ujian, submit jawaban, dan import/export; saat ini tersedia security check mandiri tanpa dependency baru.
 - [x] Jalankan `php -l` untuk file PHP pada setiap pull request melalui workflow validation.
 - [x] Tambahkan integration smoke test HTTP dengan MariaDB sementara melalui `scripts/smoke-docker.sh` dan workflow CI.
+- [x] Tambahkan regression test login/logout peserta terhadap schema `cbt_user`.
 - [x] Pisahkan workflow validation, build Docker, dan release.
 - [x] Tambahkan smoke test HTTP untuk endpoint utama dan verifikasi permission file manager pada environment Docker.
 
