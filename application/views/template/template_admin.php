@@ -40,6 +40,7 @@
 
     <!-- select2 -->
     <link href="<?php echo base_url(); ?>public/plugins/select2-4.0.5/css/select2.min.css" rel="stylesheet" type="text/css" />
+    <link href="<?php echo base_url(); ?>public/css/zyacbt-modern.css" rel="stylesheet" type="text/css" />
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -132,7 +133,7 @@
 		} 
   </script>
   </head>
-  <body class="skin-green sidebar-mini">
+  <body class="skin-green sidebar-mini zyacbt-admin">
     <div class="wrapper">
 
       <header class="main-header">

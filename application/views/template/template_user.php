@@ -22,6 +22,7 @@
     <!-- AdminLTE Skins. Choose a skin from the css/skins
          folder instead of downloading all of them to reduce the load. -->
     <link href="<?php echo base_url(); ?>public/plugins/adminlte/css/skins/_all-skins.min.css" rel="stylesheet" type="text/css" />
+    <link href="<?php echo base_url(); ?>public/css/zyacbt-modern.css" rel="stylesheet" type="text/css" />
 
     <link href="<?php echo base_url(); ?>public/plugins/iCheck/square/blue.css" rel="stylesheet" type="text/css" />
   
@@ -47,7 +48,7 @@
     
   </head>
   <!-- ADD THE CLASS layout-top-nav TO REMOVE THE SIDEBAR. -->
-  <body class="skin-green layout-top-nav">
+  <body class="skin-green layout-top-nav zyacbt-public">
     <div class="wrapper">
 
       <header class="main-header">               

@@ -1,4 +1,6 @@
 2026-09-22
+- Menambahkan theme UI modern responsif untuk halaman publik, ujian, dan admin.
+- Memperbarui tampilan navigasi, form, tabel, card, modal, dashboard, dan halaman login secara konsisten.
 - Menambahkan satu sumber versi semver melalui file `VERSION` untuk footer dan Docker image.
 - Memindahkan konfigurasi encryption key dan kredensial Docker ke environment variable.
 - Menambahkan proteksi eksekusi script pada folder `uploads` dan `public/uploads`.
