@@ -14,9 +14,16 @@ services:
       DB_USERNAME: ${DB_USERNAME:-zyacbt}
       DB_PASSWORD: ${DB_PASSWORD:-zyacbt}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-development-only-change-me}
+      MONITORING_WEBHOOK_URL: ${MONITORING_WEBHOOK_URL:-}
+      MONITORING_WEBHOOK_TOKEN: ${MONITORING_WEBHOOK_TOKEN:-}
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "$$context = stream_context_create(['http' => ['timeout' => 3]]); $$response = @file_get_contents('http://127.0.0.1/health', false, $$context); exit($$response === false ? 1 : 0);"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
     volumes:
       # Source code dipasang sebagai bind mount agar perubahan langsung aktif
       # tanpa rebuild image. Rebuild hanya diperlukan saat Dockerfile atau

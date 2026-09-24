@@ -1,3 +1,8 @@
+2026-09-24
+- Menyelesaikan rencana upgrade dengan test PHPUnit, service domain ujian, response JSON terpusat, health endpoint, dan monitoring webhook opsional.
+- Menambahkan audit dependency Composer pada workflow validation dan mengunci PHPUnit 9.6.37.
+- Menambahkan health check Docker berbasis endpoint `/health`.
+
 2026-09-22
 - Menghapus akun contributor lama `masipnu` dari dump database.
 - Memperbaiki navigasi Soal Selanjutnya yang gagal karena token CSRF tidak ikut terkirim pada request AJAX.

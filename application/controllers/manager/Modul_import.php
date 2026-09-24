@@ -96,12 +96,13 @@ class Modul_import extends Member_Controller {
 			$status['pesan'] = $this->import_file($upload_data['full_path'], $id_topik);
 			@unlink($upload_data['full_path']);
 			log_message('info', 'Import soal berhasil diproses: '.$upload_data['file_name']);
+			$this->monitoring_service->event('question.import.completed', array('filename' => $upload_data['file_name'], 'topik_id' => $id_topik));
 		}
         }else{
         	$status['status'] = 0;
             $status['pesan'] = validation_errors();
         }
-        echo json_encode($status);
+        $this->api_response->send($status);
     }
 
     function import_file($inputFileName, $id_topik){

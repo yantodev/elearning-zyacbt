@@ -161,7 +161,7 @@ class Modul_import_word extends Member_Controller {
         	$status['status'] = 0;
             $status['pesan'] = validation_errors();
         }
-        echo json_encode($status);
+        $this->api_response->send($status);
     }
 	
 	function konfirmasi(){
@@ -295,7 +295,7 @@ class Modul_import_word extends Member_Controller {
 			$status['status'] = 0;
             $status['pesan'] = validation_errors();
         }
-        echo json_encode($status);
+        $this->api_response->send($status);
 	}
 	
 	function innerHTML(DOMNode $n, $include_target_tag = false ) {
@@ -416,7 +416,7 @@ class Modul_import_word extends Member_Controller {
         	$status['status'] = 0;
             $status['pesan'] = validation_errors();
         }
-        echo json_encode($status);
+        $this->api_response->send($status);
     }
 	
 	function get_datatable_image(){
@@ -486,7 +486,7 @@ class Modul_import_word extends Member_Controller {
 		$output['iTotalRecords'] = $iTotal;
 		$output['iTotalDisplayRecords'] = $iTotal;
         
-		echo json_encode($output);
+		$this->api_response->send($output);
 	}
 	
 	/**

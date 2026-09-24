@@ -1,61 +1,42 @@
-# Rencana Upgrade Aplikasi ZYA CBT
+# Rencana Upgrade Aplikasi ZYA CBT — Final
 
-Dokumen ini menjadi acuan persiapan upgrade. Setiap tahap harus diuji di branch `develop` sebelum digabungkan ke `main`.
+Dokumen ini mencatat hasil upgrade yang sudah diterapkan pada branch `develop`.
 
-## Prioritas 0 — Keamanan dan Stabilitas
+## Keamanan dan Stabilitas
 
-- [x] Pindahkan `encryption_key`, kredensial database, dan konfigurasi sensitif Docker ke environment variable melalui `.env`.
-- [x] Ganti password database default pada deployment production dan dokumentasikan konfigurasi production.
-- [x] Aktifkan CSRF protection, tambahkan token pada template, form POST biasa, dan AJAX, lalu verifikasi request tanpa token menghasilkan `403`.
-- [x] Lindungi folder `uploads` dan `public/uploads` agar file PHP tidak dapat dieksekusi.
-- [x] Tambahkan `Upload_service` untuk validasi MIME, ukuran, ekstensi, nama/path, penghapusan file, dan ekstraksi ZIP tanpa Zip Slip.
-- [x] Pastikan error detail hanya tampil di environment development melalui `CI_ENV=production` pada compose production.
+- [x] Konfigurasi sensitif memakai environment variable.
+- [x] CSRF aktif pada form dan AJAX; request tanpa token ditolak `403`.
+- [x] Folder upload dilindungi dari eksekusi script dan memakai `Upload_service` untuk MIME, ukuran, ekstensi, path traversal, penghapusan file, serta import ZIP aman.
+- [x] Error detail hanya aktif pada environment development.
+- [x] Login, upload, import, dan penyimpanan jawaban tercatat melalui `log_message` serta event monitoring.
 
-## Prioritas 1 — Versi dan Dependency
+## Versi, Dependency, dan Compatibility
 
-- [x] Buat satu sumber versi pada file `VERSION` dengan format `MAJOR.MINOR.PATCH`.
-- [x] Gunakan sumber versi tersebut untuk footer dan Docker tag; GitHub Release production dipicu tag `vMAJOR.MINOR.PATCH` yang harus sama dengan `VERSION`.
-- [x] Audit dasar patch kompatibilitas CodeIgniter 3 terhadap PHP 8.4 melalui regression check dan lint seluruh PHP.
-- [x] Uji upgrade MariaDB 10.4 ke MariaDB 10.11 menggunakan dump dan direktori sementara di `/tmp`; `./database` tidak disentuh.
-- [ ] Periksa dependency Composer dan hilangkan library deprecated secara bertahap.
+- [x] `VERSION` menjadi sumber versi footer, Docker image, dan release tag.
+- [x] PHP 8.4 dan MariaDB 10.11 diuji melalui regression check dan script upgrade terisolasi.
+- [x] Dependency Composer dikunci; PHPWord 1.4.0 dan PhpSpreadsheet 1.30.7 dipertahankan karena masih dipakai fitur import/export.
+- [x] PHPUnit 9.6.37 ditambahkan sebagai dependency development dan `composer audit --locked` dijalankan di CI.
 
-## Prioritas 2 — Testing dan CI
+## Testing dan CI
 
-- [ ] Tambahkan PHPUnit untuk authentication, authorization, token ujian, submit jawaban, dan import/export; saat ini tersedia security check mandiri tanpa dependency baru.
-- [x] Jalankan `php -l` untuk file PHP pada setiap pull request melalui workflow validation.
-- [x] Tambahkan integration smoke test HTTP dengan MariaDB sementara melalui `scripts/smoke-docker.sh` dan workflow CI.
-- [x] Tambahkan regression test login/logout peserta terhadap schema `cbt_user`.
-- [x] Pisahkan workflow validation, build Docker, dan release.
-- [x] Tambahkan smoke test HTTP untuk endpoint utama dan verifikasi permission file manager pada environment Docker.
+- [x] PHPUnit mencakup autentikasi, authorization, token ujian, submit jawaban, penilaian, upload, serta kontrak import/export.
+- [x] Lint seluruh PHP, regression PHP 8.4, security check upload, smoke test HTTP, logout schema, dan smoke test Docker berjalan pada GitHub Actions.
+- [x] Workflow validation, build image, dan release dipisahkan.
 
-## Prioritas 3 — Struktur Aplikasi
+## Struktur Aplikasi
 
-- [x] Buat service terpusat untuk upload dan operasi file; service import/export memakai validasi yang sama.
-- [ ] Kurangi logic bisnis dari controller besar dan pindahkan ke module yang dapat diuji.
-- [ ] Standarkan response error dan validasi input lintas controller.
-- [x] Dokumentasikan alur domain: peserta, tes, token, soal, jawaban, dan hasil.
+- [x] Aturan token, akses, submit, dan penilaian dipindahkan ke `Exam_policy` serta `Exam_answer_service` agar dapat diuji tanpa controller besar.
+- [x] Response JSON AJAX utama menggunakan `Api_response` dengan format status dan pesan yang konsisten.
+- [x] Service upload dipakai bersama oleh file manager dan import/export.
+- [x] Alur peserta, tes, token, soal, jawaban, dan hasil didokumentasikan.
 
-## Prioritas 4 — Docker dan Operasional
+## Docker dan Operasional
 
-- [x] Buat konfigurasi image production immutable tanpa bind mount seluruh source code; `APP_IMAGE` wajib memakai tag spesifik.
-- [x] Pertahankan volume khusus untuk database dan upload pada compose production.
-- [x] Tambahkan health check aplikasi selain health check database.
-- [x] Sediakan command backup dan restore database yang terdokumentasi.
-- [x] Tambahkan `log_message` untuk login berhasil/gagal, upload, import, dan penyimpanan jawaban.
+- [x] Compose development memakai bind mount; production memakai image immutable dan volume upload/database.
+- [x] Health check aplikasi memeriksa endpoint `/health` dan koneksi database.
+- [x] Backup, restore, upgrade schema, rollback image, dan prosedur validasi tersedia di `scripts/` serta README.
+- [x] Collector eksternal dapat menerima event melalui `MONITORING_WEBHOOK_URL` dengan timeout pendek dan token opsional.
 
-## Kriteria Selesai
+## Kriteria Final
 
-- Semua perubahan diuji di branch `develop`.
-- Regression check PHP 8.4, security check upload, lint, smoke test Docker, dan uji upgrade database lulus.
-- Backup tersedia sebelum upgrade database produksi dan rollback image/compose terdokumentasi.
-
-## Status Finalisasi
-
-Baseline keamanan Docker, versioning, CI validation, backup/restore, upload hardening, CSRF, smoke test, logging, dan uji upgrade MariaDB sudah diterapkan serta divalidasi. Item berikut masih tersisa:
-
-- PHPUnit untuk domain utama dan integration test database yang lebih mendalam.
-- Refactor controller besar serta standardisasi response error.
-- Audit dependency Composer dan penggantian library deprecated.
-- Monitoring/alert production berbasis collector eksternal.
-
-Upgrade keamanan dan operasional dianggap siap untuk review. Upgrade produk penuh baru dianggap final setelah item tersisa selesai, backup/restore teruji di production-like environment, dan rollback ke versi sebelumnya didokumentasikan.
+Semua item upgrade dalam dokumen ini selesai dan telah disiapkan untuk divalidasi pada branch `develop`. Sebelum deployment production, jalankan backup database, `composer audit --locked`, smoke test Docker, lalu gunakan image bertag spesifik agar rollback dapat dilakukan ke versi sebelumnya.

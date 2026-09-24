@@ -18,7 +18,7 @@ class Tool_exportimport_soal extends Member_Controller {
 		$this->load->model('cbt_modul_model');
 		$this->load->model('cbt_soal_model');
 		$this->load->model('cbt_jawaban_model');
-		$this->load->library('upload_service');
+        $this->load->library('upload_service');
 
 		parent::cek_akses($this->kode_menu);
 	}

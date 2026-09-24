@@ -137,30 +137,15 @@ class Tes_kerjakan extends Tes_Controller {
 			if($query_token->num_rows()>0){
 				$query_token = $query_token->row();
 				
-				// Mengecek token apakah dapat digunakan oleh semua TES
-				if($query_token->token_tes_id==0){
-					// Jika token dapat digunakan oleh semua TES
-					// token_aktif==1 maka berarti token aktif 1 hari
-					if($query_token->token_aktif==1){
-						$is_ok = 1;
-					}else{
-						if($this->cbt_tes_token_model->count_by_token_lifetime($token, $query_token->token_aktif)->row()->hasil>0){
-							$is_ok = 1;
-						}
-					}
-				}else{
-					// Jika token hanya spesifik untuk salah satu Tes
-					// token_aktif==1 maka berarti token aktif 1 hari
-					if($query_token->token_tes_id==$tes_id){
-						if($query_token->token_aktif==1){
-							$is_ok = 1;
-						}else{
-							if($this->cbt_tes_token_model->count_by_token_lifetime($token, $query_token->token_aktif)->row()->hasil>0){
-								$is_ok = 1;
-							}
-						}
-					}
-				}
+				$usage_count = (int) $query_token->token_aktif === 1
+					? 1
+					: $this->cbt_tes_token_model->count_by_token_lifetime($token, $query_token->token_aktif)->row()->hasil;
+				$is_ok = $this->exam_policy->valid_token(
+					$query_token->token_tes_id,
+					$tes_id,
+					$query_token->token_aktif,
+					$usage_count
+				) ? 1 : 0;
 			}
 			// Jika Cek Token berhasil
 			if($is_ok==1){
@@ -178,7 +163,7 @@ class Tes_kerjakan extends Tes_Controller {
 			$status['pesan'] = "Token Tidak Boleh Kosong";
 		}
 		
-		echo json_encode($status);
+		$this->api_response->send($status);
 	}
 
     /**
@@ -210,7 +195,7 @@ class Tes_kerjakan extends Tes_Controller {
             $status['pesan'] = validation_errors();
         }
 
-        echo json_encode($status);
+        $this->api_response->send($status);
     }
 
     /**
@@ -238,7 +223,7 @@ class Tes_kerjakan extends Tes_Controller {
             // revisi 2018-11-15
             // agar waktu mengambil dari waktu php, bukan mysql
             $waktuuser = date('Y-m-d H:i:s');
-            if($this->cbt_tes_user_model->count_by_status_waktuuser($tes_user_id, $waktuuser)->row()->hasil>0){
+			if($this->exam_policy->can_submit($this->cbt_tes_user_model->count_by_status_waktuuser($tes_user_id, $waktuuser)->row()->hasil)){
 
                 // Mengecek apakah soal ada
                 $query_soal = $this->cbt_tes_soal_model->get_by_tessoal_limit($tes_soal_id, 1);
@@ -269,11 +254,11 @@ class Tes_kerjakan extends Tes_Controller {
                         $this->cbt_tes_soal_jawaban_model->update_by_tessoal_answer_salah($tes_soal_id, $jawaban, $data_jawaban);
 
                         // Mengupdate score, change time jika pilihan benar
-                        if($query_jawaban->jawaban_benar==1){
-                            $data_tes_soal['tessoal_nilai'] = $query_tes->tes_score_right;
-                        }else{
-                            $data_tes_soal['tessoal_nilai'] = $query_tes->tes_score_wrong;
-                        }
+                        $data_tes_soal['tessoal_nilai'] = $this->exam_answer_service->score_choice(
+                            (int) $query_jawaban->jawaban_benar === 1,
+                            $query_tes->tes_score_right,
+                            $query_tes->tes_score_wrong
+                        );
 
                         $this->cbt_tes_soal_model->update('tessoal_id', $tes_soal_id, $data_tes_soal);
 
@@ -296,11 +281,12 @@ class Tes_kerjakan extends Tes_Controller {
                         
                         // Mengupdate change time, dan jawaban essay
                         $data_tes_soal['tessoal_jawaban_text'] = $jawaban;
-                        if(strtoupper($query_soal->soal_kunci)==strtoupper($jawaban)){
-                            $data_tes_soal['tessoal_nilai'] = $query_tes->tes_score_right;
-                        }else{
-                            $data_tes_soal['tessoal_nilai'] = $query_tes->tes_score_wrong;
-                        }
+                        $data_tes_soal['tessoal_nilai'] = $this->exam_answer_service->score_keyword(
+                            $jawaban,
+                            $query_soal->soal_kunci,
+                            $query_tes->tes_score_right,
+                            $query_tes->tes_score_wrong
+                        );
                         $this->cbt_tes_soal_model->update('tessoal_id', $tes_soal_id, $data_tes_soal);
 
                         $status['status'] = 1;
@@ -325,9 +311,10 @@ class Tes_kerjakan extends Tes_Controller {
 
         if (!empty($status['status']) && (int) $status['status'] === 1) {
             log_message('info', 'Jawaban tes disimpan: user='.$this->user_id.', tes_soal='.$this->input->post('tes-soal-id', TRUE));
+			$this->monitoring_service->event('exam.answer.saved', array('user_id' => $this->user_id, 'tes_soal_id' => $tes_soal_id));
         }
         
-        echo json_encode($status);
+        $this->api_response->send($status);
     }
 
     /**
@@ -353,7 +340,7 @@ class Tes_kerjakan extends Tes_Controller {
             }
         }
 
-        echo json_encode($data);
+        $this->api_response->send($data);
     }
 
     /**
@@ -378,7 +365,7 @@ class Tes_kerjakan extends Tes_Controller {
             }
         }
 
-        echo json_encode($data);
+        $this->api_response->send($data);
     }
 
     function update_tes_soal_ragu($tessoal_id=null, $ragu=null){
@@ -394,7 +381,7 @@ class Tes_kerjakan extends Tes_Controller {
             $this->cbt_tes_soal_model->update('tessoal_id', $tessoal_id, $data_tes_soal);
         }
 
-        echo json_encode($data);
+        $this->api_response->send($data);
     }
 
     /**
@@ -413,7 +400,7 @@ class Tes_kerjakan extends Tes_Controller {
             }
         }
 
-        echo json_encode($data);
+        $this->api_response->send($data);
     }
 
     /**
@@ -610,6 +597,6 @@ class Tes_kerjakan extends Tes_Controller {
             $this->cbt_tes_soal_model->update('tessoal_id ', $tessoal_id, $data_tes);
             $data['pesan'] = 'Audio berhasil diputar';
         }
-        echo json_encode($data);
+        $this->api_response->send($data);
     }
 }

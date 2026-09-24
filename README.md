@@ -86,6 +86,17 @@ CI juga menjalankan `scripts/smoke-docker.sh` dan `scripts/smoke-logout.sh` untu
 
 Versi aplikasi tersimpan di file `VERSION` dengan format `MAJOR.MINOR.PATCH`. File ini dipakai oleh footer aplikasi dan GitHub Actions untuk penamaan Docker image.
 
+Pemeriksaan kualitas kode dan dependency:
+
+```bash
+cd application
+composer install
+composer test
+composer audit --locked
+```
+
+Endpoint `http://localhost:8080/health` digunakan Docker dan monitoring eksternal untuk memeriksa aplikasi serta koneksi database. Jika ingin mengirim event login, import, dan penyimpanan jawaban ke collector, isi `MONITORING_WEBHOOK_URL` dan `MONITORING_WEBHOOK_TOKEN` pada `.env`.
+
 Versi dapat dinaikkan menggunakan script berikut. Tanpa argumen, script menaikkan patch version:
 
 ```bash

@@ -6,6 +6,8 @@ $config['site_name'] = 'Computer Based-Test';
 
 // Ambil versi dari VERSION agar footer, image, dan release memakai sumber yang sama.
 $config['site_version'] = 'dev';
+$config['monitoring_webhook_url'] = getenv('MONITORING_WEBHOOK_URL') ?: '';
+$config['monitoring_webhook_token'] = getenv('MONITORING_WEBHOOK_TOKEN') ?: '';
 $version_file = dirname(APPPATH).DIRECTORY_SEPARATOR.'VERSION';
 if (is_readable($version_file)) {
 	$version = trim(file_get_contents($version_file));

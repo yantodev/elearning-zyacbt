@@ -30,20 +30,16 @@ class Access{
 	 */
 	function login($username, $password){
 		$result = $this->users_model->get_login_info($username);
-		if($result){
-			$password = sha1($password);
-			if($password === $result->password){
+		$password_matches = $result && sha1($password) === $result->password;
+		$login_status = $this->CI->exam_policy->login_result((bool) $result, $password_matches);
+		if($login_status === 1){
 				$this->CI->session->set_userdata('cbt_user_id',$result->username);
                 $this->CI->session->set_userdata('cbt_nama',$result->nama);
                 $this->CI->session->set_userdata('cbt_level',$result->level);
                 $this->CI->session->set_userdata('cbt_opsi1',$result->opsi1);
                 $this->CI->session->set_userdata('cbt_opsi2',$result->opsi2);
-				return 1;
-			}else{
-				return 2;
-			}
 		}
-		return 0;
+		return $login_status;
 	}
 	
 	/**
@@ -59,11 +55,8 @@ class Access{
 	 */
 	function cek_akses($kode_menu){
 		$level=$this->CI->session->userdata('cbt_level');
-		if($this->users_model->cek_akses($kode_menu, $level)>0){
-			return TRUE;
-		}else{
-			return FALSE;
-		}
+		$permission_count = $this->users_model->cek_akses($kode_menu, $level);
+		return $this->CI->exam_policy->authorized($this->is_login(), $permission_count);
 	}
     
     /**
@@ -74,11 +67,8 @@ class Access{
     function cek_akses_crud($kode_menu, $tipe){
         $level=$this->CI->session->userdata('cbt_level');
         
-        if($this->users_model->cek_akses_crud($kode_menu, $level, $tipe)>0){
-			return TRUE;
-		}else{
-			return FALSE;
-		}
+        $permission_count = $this->users_model->cek_akses_crud($kode_menu, $level, $tipe);
+		return $this->CI->exam_policy->authorized($this->is_login(), $permission_count);
     }
 	
 	function get_username(){
